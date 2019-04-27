@@ -2,11 +2,11 @@
 state machine"""
 import argparse
 import pprint
-
 import pygraphviz as pgv
+from abc import ABC, abstractmethod
 
 
-class Machine(object):
+class PrintableInterfaceMachine(ABC):
     machine_attributes = {
         'directed': True,
         'strict': False,
@@ -47,6 +47,46 @@ class Machine(object):
         }
     }
 
+    def _add_nodes(self, machine, graph):
+        for state in machine.states:
+            if state in machine.finals:
+                attr = self.style_attributes['node']['final']
+            else:
+                attr = self.style_attributes['node']['default']
+            graph.add_node(state, **attr)
+
+    def _add_initials(self, machine, graph):
+        attr = self.style_attributes['node']['initial']
+        for index, state in enumerate(machine.initials):
+            graph.add_node('qi' + str(index), **attr)
+            graph.add_edge('qi' + str(index), state)
+
+    def _add_edges(self, machine, graph):
+        for transition in machine.transitions_list:
+            graph.add_edge(transition[1], transition[2], label=transition[0])
+
+    @abstractmethod
+    def represent(self, machine):
+        raise NotImplementedError
+
+
+class MyPrintableMachine(PrintableInterfaceMachine):
+    def represent(self, machine):
+        if not pgv:
+            raise Exception('You need to have pygraphviz in order to work!!!')
+
+        graph = pgv.AGraph(label=args.name, compound=True, **self.machine_attributes)
+
+        self._add_nodes(machine, graph)
+        self._add_initials(machine, graph)
+        self._add_edges(machine, graph)
+        if args.print == "verbose":
+            graph.draw(args.name + "_verbose", format='svg', prog='dot')
+        return graph
+
+
+class Machine(object):
+
     def __init__(self, name, states, alphabet, transitions_list, initials,
                  finals):
         self.name = name
@@ -56,6 +96,8 @@ class Machine(object):
         self._set_transitions()
         self.initials = initials
         self.finals = finals
+        # afegit durant refactor
+        self.interface = MyPrintableMachine()
 
     def __str__(self):
         return "{}\nALPHABET: {}\nSTATES: {}\nINITIAL STATES: {}\n" \
@@ -122,41 +164,8 @@ class Machine(object):
     def _from_minimized(self, state_group):
         pass  # TODO: this should return a Machine minimized        
 
-    def _add_nodes(self, graph):
-        for state in self.states:
-            if state in self.finals:
-                attr = self.style_attributes['node']['final']
-            else:
-                attr = self.style_attributes['node']['default']
-            graph.add_node(state, **attr)
-
-    def _add_initials(self, graph):
-        attr = self.style_attributes['node']['initial']
-        for index, state in enumerate(self.initials):
-            graph.add_node('qi' + str(index), **attr)
-            graph.add_edge('qi' + str(index), state)
-
-    def _add_edges(self, graph):
-        for transition in self.transitions_list:
-            graph.add_edge(transition[1], transition[2], label=transition[0])
-
     def represent(self):
-        if not pgv:
-            raise Exception('You need to have pygraphviz in order to work!!!')
-        
-        graph = pgv.AGraph(label=args.name, compound=True, **self.machine_attributes)
-
-        self._add_nodes(graph)
-        self._add_initials(graph)
-        self._add_edges(graph)
-        if args.print == "verbose":
-            graph.draw(args.name + "_verbose", format='svg', prog='dot')
-        return graph
-
-
-def generate_file(name, content, mode="w"):
-    f = open(name, mode)
-    f.write(content)
+        return self.interface.represent(self)
 
 
 def parse_input_file(path):
@@ -182,6 +191,11 @@ def parse_input_file(path):
     return elements
 
 
+def generate_file(name, content, mode="w"):
+    f = open(name, mode)
+    f.write(content)
+
+
 if __name__ == '__main__':
     # parse args
 
@@ -204,7 +218,7 @@ if __name__ == '__main__':
     variables = parse_input_file(args.input)
 
     af = Machine(args.name, variables.get('states'), variables.get('alpha'),
-                 variables.get('trans'), variables.get('init'), variables.get('fin'))
+                 variables.get('trans'), variables.get('init'), variables.get('end'))
 
     if args.minimize:
         # af.minimize()
