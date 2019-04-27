@@ -1,6 +1,7 @@
 """ Class of machine. It will get the attributes, and represent the 
 state machine"""
 import argparse
+import pprint
 
 import pygraphviz as pgv
 
@@ -46,14 +47,20 @@ class Machine(object):
         }
     }
 
-    def __init__(self, states, alphabet, transitions_list, initials,
+    def __init__(self, name, states, alphabet, transitions_list, initials,
                  finals):
+        self.name = name
         self.states = states
         self.alphabet = alphabet
         self.transitions_list = transitions_list
         self._set_transitions()
         self.initials = initials
         self.finals = finals
+
+    def __str__(self):
+        return "{}\nALPHABET: {}\nSTATES: {}\nINITIAL STATES: {}\n" \
+               "FINAL STATES: {}\nTRANSITIONS {}".format(self.name, self.alphabet, self.states, self.initials,
+                                                         self.finals, pprint.pformat(self.transitions))
     
     def _set_transitions(self):
         transitions = {}
@@ -133,39 +140,76 @@ class Machine(object):
         for transition in self.transitions_list:
             graph.add_edge(transition[1], transition[2], label=transition[0])
 
-    def represent(self, title=None):
+    def represent(self):
         if not pgv:
-            raise Exception('You need to have pygraphviz in order to work')
-        if title is False:
-            title = ''
+            raise Exception('You need to have pygraphviz in order to work!!!')
         
-        graph = pgv.AGraph(label=title, compound=True, **self.machine_attributes)
+        graph = pgv.AGraph(label=args.name, compound=True, **self.machine_attributes)
 
         self._add_nodes(graph)
         self._add_initials(graph)
         self._add_edges(graph)
-        graph.draw('file', format='svg', prog='dot')
+        if args.print == "verbose":
+            graph.draw(args.name + "_verbose", format='svg', prog='dot')
         return graph
+
+
+def generate_file(name, content, mode="w"):
+    f = open(name, mode)
+    f.write(content)
+
+
+def parse_input_file(path):
+    """
+
+    :param path: ruta al fitxer amb format:
+                1- Declaració alfabet: a [lletra]
+                2- Declaració estats: e [estat]
+                3- Declaració estat inicial: i [estat]
+                4- Declaració estat final: f [estat]
+                5- Declaració transició: t [lletra] [estat_origen] [estat_destí]
+    :return: diccionari amb keys: states, alpha, init, end, trans
+    """
+    # temporalment
+    elements = {}
+    elements['states'] = ['0', '1']
+    elements['alpha'] = ['a', 'b']
+    elements['init'] = ['0']
+    elements['end'] = ['1']
+    elements['trans'] = [['a', '0', '1'],
+                         ['a', '1', '1'],
+                         ['b', '1', '1']]
+    return elements
 
 
 if __name__ == '__main__':
     # parse args
 
-    parser = argparse.ArgumentParser(description="Minimitza un autòmat finit")
+    parser = argparse.ArgumentParser(description="Representa i/o minimitza un autòmat finit")
 
     parser.add_argument("-i", dest="input", required=True,
                         help="Especifica fitxer amb la definició del autòmat")
-    parser.add_argument("-o", dest="output", default=False,
+    parser.add_argument("-o", dest="output", default=False, action="store_true",
                         help="Genera fitxer de sortida amb la definició del autòmat")
     parser.add_argument("-p", choices=['simple', 'verbose', 'no'], dest="print", default='simple',
                         help="Generar imatge amb la representació del autòmat")
-    parser.add_argument("-n", dest="name", default="output", help="Defineix nom del autòmat")
+    parser.add_argument("-m", dest="minimize", default=False, action="store_true",
+                        help="Minimitza el autòmat")
+    parser.add_argument("-n", dest="name", default="automata",
+                        help="Defineix nom del autòmat, (default = automata)")
 
     args = parser.parse_args()
 
+    # dummy at the moment
+    variables = parse_input_file(args.input)
 
-    af = Machine(['0', '1'], ['a', 'b'], [['a', '0', '1'],
-                                          ['a', '1', '1'],
-                                          ['b', '1', '1']],
-                 ['0'], ['1'])
-    af.represent(title='Test').draw('file.png', format='png', prog='dot')
+    af = Machine(args.name, variables.get('states'), variables.get('alpha'),
+                 variables.get('trans'), variables.get('init'), variables.get('fin'))
+
+    if args.minimize:
+        # af.minimize()
+        raise NotImplementedError
+    if args.print != "no":
+        af.represent().draw(args.name + ".png", format='png', prog='dot')
+    if args.output:
+        generate_file(args.name + "_repr", str(af))
