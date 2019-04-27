@@ -2,7 +2,6 @@ import unittest
 from transitions.extenison import GraphMachine as Machine
 
 
-
 class TestMinimize(unittest.TestCase):
 
     def test_fst_minimize(self):
@@ -13,4 +12,3 @@ class TestMinimize(unittest.TestCase):
     
     def test_fst_already_minimized(self):
         pass
-    

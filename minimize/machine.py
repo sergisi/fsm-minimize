@@ -1,10 +1,11 @@
 """ Class of machine. It will get the attributes, and represent the 
 state machine"""
+import argparse
 
 import pygraphviz as pgv
 
 
-class Machine():
+class Machine(object):
     machine_attributes = {
         'directed': True,
         'strict': False,
@@ -121,19 +122,16 @@ class Machine():
             else:
                 attr = self.style_attributes['node']['default']
             graph.add_node(state, **attr)
-    
 
     def _add_initials(self, graph):
         attr = self.style_attributes['node']['initial']
         for index, state in enumerate(self.initials):
             graph.add_node('qi' + str(index), **attr)
             graph.add_edge('qi' + str(index), state)
-    
 
     def _add_edges(self, graph):
         for transition in self.transitions_list:
             graph.add_edge(transition[1], transition[2], label=transition[0])
-
 
     def represent(self, title=None):
         if not pgv:
@@ -146,11 +144,26 @@ class Machine():
         self._add_nodes(graph)
         self._add_initials(graph)
         self._add_edges(graph)
-        # graph.draw('file', format='svg', prog='dot')
+        graph.draw('file', format='svg', prog='dot')
         return graph
 
 
 if __name__ == '__main__':
+    # parse args
+
+    parser = argparse.ArgumentParser(description="Minimitza un autòmat finit")
+
+    parser.add_argument("-i", dest="input", required=True,
+                        help="Especifica fitxer amb la definició del autòmat")
+    parser.add_argument("-o", dest="output", default=False,
+                        help="Genera fitxer de sortida amb la definició del autòmat")
+    parser.add_argument("-p", choices=['simple', 'verbose', 'no'], dest="print", default='simple',
+                        help="Generar imatge amb la representació del autòmat")
+    parser.add_argument("-n", dest="name", default="output", help="Defineix nom del autòmat")
+
+    args = parser.parse_args()
+
+
     af = Machine(['0', '1'], ['a', 'b'], [['a', '0', '1'],
                                           ['a', '1', '1'],
                                           ['b', '1', '1']],
