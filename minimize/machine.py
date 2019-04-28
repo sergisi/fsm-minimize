@@ -178,7 +178,7 @@ def parse_input_file(path):
                 5- Declaració transició: t [lletra] [estat_origen] [estat_destí]
     :return: diccionari amb keys: states, alpha, init, end, trans
     """
-    f = open(args.input, 'r')
+    f = open(path, 'r')
     elements = {'states': [], 'alpha': [], 'init': [], 'end': [], 'trans': []}
     i = 0
     for line in f:
