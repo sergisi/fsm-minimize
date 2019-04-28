@@ -122,6 +122,9 @@ class Machine(object):
         self.transitions = transitions
     
     def minimize(self):
+        if len(self.finals) == len(self.states):
+            return Machine(self.name + ' minimized', [0], self.alphabet, 
+                       [[alpha, 0, 0] for alpha in self.alphabet], [0], [0])
         state_group = self._minimize_first()
         length = len(state_group) + 1
         while length != len(state_group):
@@ -162,11 +165,8 @@ class Machine(object):
         return values, index
     
     def _same(self, state1, state2, state_group, values):
-        if len(self.transitions[state1]) != len(self.transitions[state2]):
-            return False
         for trans in self.transitions[state1]:
-            if trans not in self.transitions[state2] and \
-               values[self.transitions[state1][trans]] != \
+            if values[self.transitions[state1][trans]] != \
                values[self.transitions[state2][trans]]:
                 return False
         return True
@@ -262,8 +262,9 @@ def generate_file(name, content, mode="w"):
 if __name__ == '__main__':
     af = Machine('fsm-example',['0', '1'], ['a', 'b'], [['a', '0', '1'],
                                       ['a', '1', '1'],
+                                      ['b', '0', '1'],
                                       ['b', '1', '1']],
-             ['0'], ['1'])
+             ['0'], ['0', '1'])
     af2 = af.minimize()
 """
 
