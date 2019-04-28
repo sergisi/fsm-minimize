@@ -192,6 +192,7 @@ def parse_input_file(path):
                 5- Declaració transició: t [lletra] [estat_origen] [estat_destí]
     :return: diccionari amb keys: states, alpha, init, end, trans
     """
+
     with open(path, 'r') as f:
         elements = {'states': [], 'alpha': [], 'init': [], 'end': [], 'trans': []}
         i = 0
@@ -199,15 +200,17 @@ def parse_input_file(path):
             i += 1
             words = line.split()
             if words[0] == "a":
-                if len(words) == 2:
-                    elements['alpha'].append(words[1])
+                if len(words) >= 2:
+                    for word in words[1:]:
+                        elements['alpha'].append(word)
                 else:
                     raise Exception("Error in line: " + str(i) + "\n\t" + str(line))
             elif words[0] == "e":
-                if len(words) == 2:
-                    elements['states'].append(words[1])
+                if len(words) >= 2:
+                    for word in words[1:]:
+                        elements['states'].append(word)
                 else:
-                    raise Exception("Error in line: " + str(i) + "\n\t" + str(line))
+                    raise Exception("Error in line: " + str(i) + "  " + line)
             elif words[0] == "i":
                 if len(words) == 2:
                     if words[1] in elements.get('states'):
