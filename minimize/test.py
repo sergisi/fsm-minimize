@@ -1,5 +1,4 @@
 import unittest
-from transitions.extenison import GraphMachine as Machine
 
 
 class TestMinimize(unittest.TestCase):

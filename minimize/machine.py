@@ -75,13 +75,11 @@ class MyPrintableMachine(PrintableInterfaceMachine):
         if not pgv:
             raise Exception('You need to have pygraphviz in order to work!!!')
 
-        graph = pgv.AGraph(label=args.name, compound=True, **self.machine_attributes)
+        graph = pgv.AGraph(label=machine.name, compound=True, **self.machine_attributes)
 
         self._add_nodes(machine, graph)
         self._add_initials(machine, graph)
         self._add_edges(machine, graph)
-        if args.print == "verbose":
-            graph.draw(args.name + "_verbose", format='svg', prog='dot')
         return graph
 
 
@@ -126,7 +124,7 @@ class Machine(object):
 
     def _minimize_process(self, state_group):
         new_state_group = []
-        values = self._values(state_group)
+        values = self._values(state_group)[0]
         stack = list(state_group)
         while not stack:
             actual_states = stack.pop()
@@ -149,7 +147,7 @@ class Machine(object):
             for state in states:
                 values[state] = index
             index += 1
-        return values
+        return values, index
     
     def _same(self, state1, state2, state_group, values):
         if len(self.transitions[state1]) != len(self.transitions[state2]):
@@ -162,7 +160,22 @@ class Machine(object):
         return True
 
     def _from_minimized(self, state_group):
-        pass  # TODO: this should return a Machine minimized        
+        values, index = self._values(state_group)
+        new_states = [i for i in range(index)]
+        transitions_list = self._get_transitions(state_group, values)
+        initials = list(dict.fromkeys([values[initial] 
+                                       for initial in self.initials]))
+        finals = list(dict.fromkeys([values[final] for final in self.finals]))
+        return Machine(self.name + 'minimized', new_states, self.alphabet, 
+                       transitions_list, initials, finals)
+
+    def _get_transitions(self, states_group, values):
+        trans = []
+        for states in states_group:
+            for transition in self.transitions[states[0]]:
+                trans.append([transition, values[states[0],
+                             values[self.transitions[states[0][transition]]]]])
+        return trans
 
     def represent(self):
         return self.interface.represent(self)
@@ -178,61 +191,57 @@ def parse_input_file(path):
                 5- Declaració transició: t [lletra] [estat_origen] [estat_destí]
     :return: diccionari amb keys: states, alpha, init, end, trans
     """
-    f = open(path, 'r')
-    elements = {'states': [], 'alpha': [], 'init': [], 'end': [], 'trans': []}
-    i = 0
-    for line in f:
-        i += 1
-        words = line.split()
-        if words[0] == "a":
-            if len(words) == 2:
-                elements['alpha'].append(words[1])
-            else:
-                raise Exception("Error in line: " + str(i) + "\n\t" + str(line))
-        elif words[0] == "e":
-            if len(words) == 2:
-                elements['states'].append(words[1])
-            else:
-                raise Exception("Error in line: " + str(i) + "\n\t" + str(line))
-        elif words[0] == "i":
-            if len(words) == 2:
-                if words[1] in elements.get('states'):
-                    elements['init'].append(words[1])
+    with open(path, 'r') as f:
+        elements = {'states': [], 'alpha': [], 'init': [], 'end': [], 'trans': []}
+        i = 0
+        for line in f:
+            i += 1
+            words = line.split()
+            if words[0] == "a":
+                if len(words) == 2:
+                    elements['alpha'].append(words[1])
                 else:
-                    raise Exception("Error STATE DOES NOT EXIST in line: " + str(i) + "\n\t" + str(line))
-            else:
-                raise Exception("Error in line: " + str(i) + "\n\t" + str(line))
-        elif words[0] == "f":
-            if len(words) == 2:
-                if words[1] in elements.get('states'):
-                    elements['end'].append(words[1])
+                    raise Exception("Error in line: " + str(i) + "\n\t" + str(line))
+            elif words[0] == "e":
+                if len(words) == 2:
+                    elements['states'].append(words[1])
                 else:
-                    raise Exception("Error STATE DOES NOT EXIST in line: " + str(i) + "\n\t" + str(line))
-            else:
-                raise Exception("Error in line: " + str(i) + "\n\t" + str(line))
-        elif words[0] == "t":
-            if len(words) == 4:
-                if words[1] in elements.get('alpha'):
-                    if words[2] in elements.get('states') and words[3] in elements.get('states'):
-                        elements['trans'].append((words[1], words[2], words[3]))
+                    raise Exception("Error in line: " + str(i) + "\n\t" + str(line))
+            elif words[0] == "i":
+                if len(words) == 2:
+                    if words[1] in elements.get('states'):
+                        elements['init'].append(words[1])
                     else:
                         raise Exception("Error STATE DOES NOT EXIST in line: " + str(i) + "\n\t" + str(line))
                 else:
-                    raise Exception("Error WORD DOES NOT EXIST in alphabet: " + str(i) + "\n\t" + str(line))
+                    raise Exception("Error in line: " + str(i) + "\n\t" + str(line))
+            elif words[0] == "f":
+                if len(words) == 2:
+                    if words[1] in elements.get('states'):
+                        elements['end'].append(words[1])
+                    else:
+                        raise Exception("Error STATE DOES NOT EXIST in line: " + str(i) + "\n\t" + str(line))
+                else:
+                    raise Exception("Error in line: " + str(i) + "\n\t" + str(line))
+            elif words[0] == "t":
+                if len(words) == 4:
+                    if words[1] in elements.get('alpha'):
+                        if words[2] in elements.get('states') and words[3] in elements.get('states'):
+                            elements['trans'].append((words[1], words[2], words[3]))
+                        else:
+                            raise Exception("Error STATE DOES NOT EXIST in line: " + str(i) + "\n\t" + str(line))
+                    else:
+                        raise Exception("Error WORD DOES NOT EXIST in alphabet: " + str(i) + "\n\t" + str(line))
+                else:
+                    raise Exception("Error in line: " + str(i) + "\n\t" + str(line))
             else:
-                raise Exception("Error in line: " + str(i) + "\n\t" + str(line))
-        else:
-            raise Exception("Input file does not match the format expected")
-
-    f.close()
-
+                raise Exception("Input file does not match the format expected")
     return elements
 
 
 def generate_file(name, content, mode="w"):
-    f = open(name, mode)
-    f.write(content)
-    f.close()
+    with open(name, mode) as f:
+        f.write(content)
 
 
 if __name__ == '__main__':
