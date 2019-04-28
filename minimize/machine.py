@@ -119,16 +119,16 @@ class Machine(object):
         return self._from_minimized(state_group)
 
     def _minimize_first(self):
-        return [[state for state in self.states not in self.finals],
+        return [[state for state in self.states if state not in self.finals],
                 self.finals]
 
     def _minimize_process(self, state_group):
         new_state_group = []
         values = self._values(state_group)[0]
         stack = list(state_group)
-        while not stack:
-            actual_states = stack.pop()
-            actual_state = stack.pop()
+        while stack:
+            actual_states = list(stack.pop(0))
+            actual_state = actual_states.pop(0)
             to_add = [actual_state]
             to_stack = []
             for state in actual_states:
@@ -136,7 +136,8 @@ class Machine(object):
                     to_add.append(state)
                 else:
                     to_stack.append(state)
-            stack.append(to_stack)
+            if to_stack:
+                stack.append(to_stack)
             new_state_group.append(to_add)
         return new_state_group
     
@@ -166,15 +167,15 @@ class Machine(object):
         initials = list(dict.fromkeys([values[initial] 
                                        for initial in self.initials]))
         finals = list(dict.fromkeys([values[final] for final in self.finals]))
-        return Machine(self.name + 'minimized', new_states, self.alphabet, 
+        return Machine(self.name + ' minimized', new_states, self.alphabet, 
                        transitions_list, initials, finals)
 
     def _get_transitions(self, states_group, values):
         trans = []
         for states in states_group:
             for transition in self.transitions[states[0]]:
-                trans.append([transition, values[states[0],
-                             values[self.transitions[states[0][transition]]]]])
+                trans.append([transition, values[states[0]],
+                             values[self.transitions[states[0]][transition]]])
         return trans
 
     def represent(self):
@@ -245,6 +246,16 @@ def generate_file(name, content, mode="w"):
 
 
 if __name__ == '__main__':
+    af = Machine('fsm-example',['0', '1'], ['a', 'b'], [['a', '0', '1'],
+                                      ['a', '1', '1'],
+                                      ['b', '1', '1']],
+             ['0'], ['1'])
+    af2 = af.minimize()
+
+
+
+"""
+if __name__ == '__main__':
     # parse args
 
     parser = argparse.ArgumentParser(description="Representa i/o minimitza un autòmat finit")
@@ -275,3 +286,4 @@ if __name__ == '__main__':
         af.represent().draw(args.name + ".png", format='png', prog='dot')
     if args.output:
         generate_file(args.name + "_repr", str(af))
+"""
