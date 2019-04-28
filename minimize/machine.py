@@ -170,7 +170,6 @@ class Machine(object):
 
 def parse_input_file(path):
     """
-
     :param path: ruta al fitxer amb format:
                 1- Declaració alfabet: a [lletra]
                 2- Declaració estats: e [estat]
@@ -179,21 +178,61 @@ def parse_input_file(path):
                 5- Declaració transició: t [lletra] [estat_origen] [estat_destí]
     :return: diccionari amb keys: states, alpha, init, end, trans
     """
-    # temporalment
-    elements = {}
-    elements['states'] = ['0', '1']
-    elements['alpha'] = ['a', 'b']
-    elements['init'] = ['0']
-    elements['end'] = ['1']
-    elements['trans'] = [['a', '0', '1'],
-                         ['a', '1', '1'],
-                         ['b', '1', '1']]
+    f = open(args.input, 'r')
+    elements = {'states': [], 'alpha': [], 'init': [], 'end': [], 'trans': []}
+    i = 0
+    for line in f:
+        i += 1
+        words = line.split()
+        if words[0] == "a":
+            if len(words) == 2:
+                elements['alpha'].append(words[1])
+            else:
+                raise Exception("Error in line: " + str(i) + "\n\t" + str(line))
+        elif words[0] == "e":
+            if len(words) == 2:
+                elements['states'].append(words[1])
+            else:
+                raise Exception("Error in line: " + str(i) + "\n\t" + str(line))
+        elif words[0] == "i":
+            if len(words) == 2:
+                if words[1] in elements.get('states'):
+                    elements['init'].append(words[1])
+                else:
+                    raise Exception("Error STATE DOES NOT EXIST in line: " + str(i) + "\n\t" + str(line))
+            else:
+                raise Exception("Error in line: " + str(i) + "\n\t" + str(line))
+        elif words[0] == "f":
+            if len(words) == 2:
+                if words[1] in elements.get('states'):
+                    elements['end'].append(words[1])
+                else:
+                    raise Exception("Error STATE DOES NOT EXIST in line: " + str(i) + "\n\t" + str(line))
+            else:
+                raise Exception("Error in line: " + str(i) + "\n\t" + str(line))
+        elif words[0] == "t":
+            if len(words) == 4:
+                if words[1] in elements.get('alpha'):
+                    if words[2] in elements.get('states') and words[3] in elements.get('states'):
+                        elements['trans'].append((words[1], words[2], words[3]))
+                    else:
+                        raise Exception("Error STATE DOES NOT EXIST in line: " + str(i) + "\n\t" + str(line))
+                else:
+                    raise Exception("Error WORD DOES NOT EXIST in alphabet: " + str(i) + "\n\t" + str(line))
+            else:
+                raise Exception("Error in line: " + str(i) + "\n\t" + str(line))
+        else:
+            raise Exception("Input file does not match the format expected")
+
+    f.close()
+
     return elements
 
 
 def generate_file(name, content, mode="w"):
     f = open(name, mode)
     f.write(content)
+    f.close()
 
 
 if __name__ == '__main__':
