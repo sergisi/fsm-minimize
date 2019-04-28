@@ -87,6 +87,7 @@ class Machine(object):
 
     def __init__(self, name, states, alphabet, transitions_list, initials,
                  finals):
+        # basic proprieties
         self.name = name
         self.states = states
         self.alphabet = alphabet
@@ -94,13 +95,23 @@ class Machine(object):
         self._set_transitions()
         self.initials = initials
         self.finals = finals
-        # afegit durant refactor
+        print(self)
+        # check
+        if not self._allowed_machine():
+            raise Exception("Aquesta màquina d'estats no està permesa")
+        # graphic interface
         self.interface = MyPrintableMachine()
 
     def __str__(self):
         return "{}\nALPHABET: {}\nSTATES: {}\nINITIAL STATES: {}\n" \
-               "FINAL STATES: {}\nTRANSITIONS {}".format(self.name, self.alphabet, self.states, self.initials,
-                                                         self.finals, pprint.pformat(self.transitions))
+               "FINAL STATES: {}\nTRANSITIONS\n {}".format(self.name, self.alphabet, self.states, self.initials,
+                                                           self.finals, pprint.pformat(self.transitions))
+
+    def _allowed_machine(self):
+        if len(self.states) == 0 or len(self.alphabet) == 0 or len(self.finals) == 0 or \
+                len(self.initials) == 0 or len(self.transitions_list) != (len(self.states) * len(self.alphabet)):
+            return False
+        return True
     
     def _set_transitions(self):
         transitions = {}
@@ -247,17 +258,15 @@ def generate_file(name, content, mode="w"):
     with open(name, mode) as f:
         f.write(content)
 
-
+"""
 if __name__ == '__main__':
     af = Machine('fsm-example',['0', '1'], ['a', 'b'], [['a', '0', '1'],
                                       ['a', '1', '1'],
                                       ['b', '1', '1']],
              ['0'], ['1'])
     af2 = af.minimize()
-
-
-
 """
+
 if __name__ == '__main__':
     # parse args
 
@@ -289,4 +298,4 @@ if __name__ == '__main__':
         af.represent().draw(args.name + ".png", format='png', prog='dot')
     if args.output:
         generate_file(args.name + "_repr", str(af))
-"""
+
