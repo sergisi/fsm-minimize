@@ -111,6 +111,9 @@ class Machine(object):
         self.transitions = transitions
     
     def minimize(self):
+        if len(self.finals) == len(self.states):
+            return Machine(self.name + ' minimized', [0], self.alphabet, 
+                       [[alpha, 0, 0] for alpha in self.alphabet], [0], [0])
         state_group = self._minimize_first()
         length = len(state_group) + 1
         while length != len(state_group):
@@ -119,11 +122,8 @@ class Machine(object):
         return self._from_minimized(state_group)
 
     def _minimize_first(self):
-        group = [[state for state in self.states if state not in self.finals],
+        return [[state for state in self.states if state not in self.finals],
                 self.finals]
-        if not group[0]:
-            group.pop(0)
-        return group
 
     def _minimize_process(self, state_group):
         new_state_group = []
