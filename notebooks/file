@@ -8,7 +8,7 @@
  viewBox="0.00 0.00 543.72 191.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 187)">
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-187 539.7214,-187 539.7214,4 -4,4"/>
-<text text-anchor="middle" x="267.8607" y="-7.8" font-family="Times,serif" font-size="14.00" fill="#000000">fsm&#45;example minimized</text>
+<text text-anchor="middle" x="267.8607" y="-7.8" font-family="Times,serif" font-size="14.00" fill="#000000">fsm&#45;to&#45;minimize minimized</text>
 <!-- 0 -->
 <g id="node1" class="node">
 <title>0</title>
