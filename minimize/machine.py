@@ -286,17 +286,24 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    verbose = args.print
+
     # dummy at the moment
     variables = parse_input_file(args.input)
 
     af = Machine(args.name, variables.get('states'), variables.get('alpha'),
                  variables.get('trans'), variables.get('init'), variables.get('end'))
 
+    # minimized automata
+    af_m = None
+
     if args.minimize:
-        # af.minimize()
-        raise NotImplementedError
+        af_m = af.minimize()
     if args.print != "no":
         af.represent().draw(args.name + ".png", format='png', prog='dot')
+        if args.minimize:
+            af_m.represent().draw(args.name + "_min.png", format='png', prog='dot')
     if args.output:
         generate_file(args.name + "_repr", str(af))
-
+        if args.minimize:
+            generate_file(args.name + "_min_repr", str(af_m))
