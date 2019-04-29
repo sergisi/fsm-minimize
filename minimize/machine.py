@@ -5,6 +5,8 @@ import pprint
 import pygraphviz as pgv
 from abc import ABC, abstractmethod
 
+verbose = False
+
 
 class PrintableInterfaceMachine(ABC):
     machine_attributes = {
@@ -80,6 +82,10 @@ class MyPrintableMachine(PrintableInterfaceMachine):
         self._add_nodes(machine, graph)
         self._add_initials(machine, graph)
         self._add_edges(machine, graph)
+
+        if verbose:
+            generate_file("draw_verbosity.txt", str(graph))
+
         return graph
 
 
@@ -95,7 +101,6 @@ class Machine(object):
         self._set_transitions()
         self.initials = initials
         self.finals = finals
-        print(self)
         # check
         if not self._allowed_machine():
             raise Exception("Aquesta màquina d'estats no està permesa")
